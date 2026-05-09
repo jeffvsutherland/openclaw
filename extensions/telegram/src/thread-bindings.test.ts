@@ -327,7 +327,7 @@ describe("telegram thread bindings", () => {
       storeSessionKey: "agent:main:acp:stale-1",
       entry: undefined,
       acp: undefined,
-      storeReadFailed: false,
+      readFailed: false,
     });
 
     const reloaded = createTelegramThreadBindingManager({
@@ -377,7 +377,7 @@ describe("telegram thread bindings", () => {
     expect(readAcpSessionEntryMock).not.toHaveBeenCalled();
   });
 
-  it("keeps ACP bindings when the session store cannot be read during startup cleanup", async () => {
+  it("keeps ACP bindings when the session database cannot be read during startup cleanup", async () => {
     createTelegramThreadBindingManager({
       accountId: "default",
       persist: true,
@@ -401,7 +401,7 @@ describe("telegram thread bindings", () => {
       storeSessionKey: "agent:main:acp:read-failed",
       entry: undefined,
       acp: undefined,
-      storeReadFailed: true,
+      readFailed: true,
     });
 
     const reloaded = createTelegramThreadBindingManager({
