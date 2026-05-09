@@ -93,7 +93,7 @@ function installRuntime(params: {
   });
   const readAllowFromStore = vi.fn(async () => []);
   const readSessionUpdatedAt = vi.fn(
-    (_params?: { storePath: string; sessionKey: string }): number | undefined => undefined,
+    (_params?: { agentId?: string; sessionKey: string }): number | undefined => undefined,
   );
   type ResolvedTurn = Awaited<
     ReturnType<Parameters<PluginRuntime["channel"]["turn"]["run"]>[0]["adapter"]["resolveTurn"]>
@@ -431,10 +431,7 @@ describe("zalouser monitor group mention gating", () => {
 
   async function processOpenDmMessage(params?: {
     message?: Partial<ZaloInboundMessage>;
-    readSessionUpdatedAt?: (input?: {
-      storePath: string;
-      sessionKey: string;
-    }) => number | undefined;
+    readSessionUpdatedAt?: (input?: { agentId?: string; sessionKey: string }) => number | undefined;
   }) {
     const runtime = installRuntime({
       commandAuthorized: false,
@@ -781,7 +778,7 @@ describe("zalouser monitor group mention gating", () => {
 
   it("reuses the legacy DM session key when only the old group-shaped session exists", async () => {
     const { dispatchReplyWithBufferedBlockDispatcher } = await processOpenDmMessage({
-      readSessionUpdatedAt: (input?: { storePath: string; sessionKey: string }) =>
+      readSessionUpdatedAt: (input?: { agentId?: string; sessionKey: string }) =>
         input?.sessionKey === "agent:main:zalouser:group:321" ? 123 : undefined,
     });
 
