@@ -1,8 +1,6 @@
-import fs from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CronService } from "./service.js";
+import { createCronStoreHarness } from "./service.test-harness.js";
 
 type CronServiceParams = ConstructorParameters<typeof CronService>[0];
 
@@ -12,23 +10,17 @@ const noopLogger = {
   warn: vi.fn(),
   error: vi.fn(),
 };
-
-async function makeStorePath() {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-cron-failure-alert-"));
-  return {
-    cleanup: async () => {
-      await fs.rm(dir, { recursive: true, force: true });
-    },
-  };
-}
+const { makeStoreKey } = createCronStoreHarness({ prefix: "openclaw-cron-failure-alert-" });
 
 function createFailureAlertCron(params: {
   cronConfig?: CronServiceParams["cronConfig"];
+  storeKey: string;
   runIsolatedAgentJob: NonNullable<CronServiceParams["runIsolatedAgentJob"]>;
   sendCronFailureAlert: NonNullable<CronServiceParams["sendCronFailureAlert"]>;
 }) {
   return new CronService({
     cronEnabled: true,
+    storeKey: params.storeKey,
     cronConfig: params.cronConfig,
     log: noopLogger,
     enqueueSystemEvent: vi.fn(),
@@ -53,7 +45,7 @@ describe("CronService failure alerts", () => {
   });
 
   it("alerts after configured consecutive failures and honors cooldown", async () => {
-    const store = await makeStorePath();
+    const { storeKey } = await makeStoreKey();
     const sendCronFailureAlert = vi.fn(async () => undefined);
     const runIsolatedAgentJob = vi.fn(async () => ({
       status: "error" as const,
@@ -61,6 +53,7 @@ describe("CronService failure alerts", () => {
     }));
 
     const cron = createFailureAlertCron({
+      storeKey,
       cronConfig: {
         failureAlert: {
           enabled: true,
@@ -110,11 +103,10 @@ describe("CronService failure alerts", () => {
     );
 
     cron.stop();
-    await store.cleanup();
   });
 
   it("supports per-job failure alert override when global alerts are disabled", async () => {
-    const store = await makeStorePath();
+    const { storeKey } = await makeStoreKey();
     const sendCronFailureAlert = vi.fn(async () => undefined);
     const runIsolatedAgentJob = vi.fn(async () => ({
       status: "error" as const,
@@ -122,6 +114,7 @@ describe("CronService failure alerts", () => {
     }));
 
     const cron = createFailureAlertCron({
+      storeKey,
       cronConfig: {
         failureAlert: {
           enabled: false,
@@ -157,11 +150,10 @@ describe("CronService failure alerts", () => {
     );
 
     cron.stop();
-    await store.cleanup();
   });
 
   it("respects per-job failureAlert=false and suppresses alerts", async () => {
-    const store = await makeStorePath();
+    const { storeKey } = await makeStoreKey();
     const sendCronFailureAlert = vi.fn(async () => undefined);
     const runIsolatedAgentJob = vi.fn(async () => ({
       status: "error" as const,
@@ -169,6 +161,7 @@ describe("CronService failure alerts", () => {
     }));
 
     const cron = createFailureAlertCron({
+      storeKey,
       cronConfig: {
         failureAlert: {
           enabled: true,
@@ -195,11 +188,10 @@ describe("CronService failure alerts", () => {
     expect(sendCronFailureAlert).not.toHaveBeenCalled();
 
     cron.stop();
-    await store.cleanup();
   });
 
   it("preserves includeSkipped through failure alert updates", async () => {
-    const store = await makeStorePath();
+    const { storeKey } = await makeStoreKey();
     const sendCronFailureAlert = vi.fn(async () => undefined);
     const runIsolatedAgentJob = vi.fn(async () => ({
       status: "skipped" as const,
@@ -207,6 +199,7 @@ describe("CronService failure alerts", () => {
     }));
 
     const cron = createFailureAlertCron({
+      storeKey,
       cronConfig: {
         failureAlert: {
           enabled: true,
@@ -256,11 +249,10 @@ describe("CronService failure alerts", () => {
     );
 
     cron.stop();
-    await store.cleanup();
   });
 
   it("threads failure alert mode/accountId and skips best-effort jobs", async () => {
-    const store = await makeStorePath();
+    const { storeKey } = await makeStoreKey();
     const sendCronFailureAlert = vi.fn(async () => undefined);
     const runIsolatedAgentJob = vi.fn(async () => ({
       status: "error" as const,
@@ -268,6 +260,7 @@ describe("CronService failure alerts", () => {
     }));
 
     const cron = createFailureAlertCron({
+      storeKey,
       cronConfig: {
         failureAlert: {
           enabled: true,
@@ -319,11 +312,10 @@ describe("CronService failure alerts", () => {
     expect(sendCronFailureAlert).toHaveBeenCalledTimes(1);
 
     cron.stop();
-    await store.cleanup();
   });
 
   it("alerts for repeated skipped runs only when opted in", async () => {
-    const store = await makeStorePath();
+    const { storeKey } = await makeStoreKey();
     const sendCronFailureAlert = vi.fn(async () => undefined);
     const runIsolatedAgentJob = vi.fn(async () => ({
       status: "skipped" as const,
@@ -331,6 +323,7 @@ describe("CronService failure alerts", () => {
     }));
 
     const cron = createFailureAlertCron({
+      storeKey,
       cronConfig: {
         failureAlert: {
           enabled: true,
@@ -374,11 +367,10 @@ describe("CronService failure alerts", () => {
     expect(skippedJob?.state.consecutiveErrors).toBe(0);
 
     cron.stop();
-    await store.cleanup();
   });
 
   it("tracks skipped runs without alerting or affecting error backoff when includeSkipped is off", async () => {
-    const store = await makeStorePath();
+    const { storeKey } = await makeStoreKey();
     const sendCronFailureAlert = vi.fn(async () => undefined);
     const runIsolatedAgentJob = vi.fn(async () => ({
       status: "skipped" as const,
@@ -386,6 +378,7 @@ describe("CronService failure alerts", () => {
     }));
 
     const cron = createFailureAlertCron({
+      storeKey,
       cronConfig: {
         failureAlert: {
           enabled: true,
@@ -416,6 +409,5 @@ describe("CronService failure alerts", () => {
     expect(skippedJob?.state.consecutiveErrors).toBe(0);
 
     cron.stop();
-    await store.cleanup();
   });
 });
