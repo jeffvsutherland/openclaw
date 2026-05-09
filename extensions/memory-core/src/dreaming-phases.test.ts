@@ -235,7 +235,6 @@ async function writeSqliteTranscript(params: {
       env: { OPENCLAW_STATE_DIR: path.join(params.workspaceDir, ".state") },
       agentId: params.agentId ?? "main",
       sessionId,
-      transcriptPath: params.transcriptPath,
       events,
       now: () => createdAt,
     });
@@ -246,7 +245,6 @@ async function writeSqliteTranscript(params: {
       env: { OPENCLAW_STATE_DIR: path.join(params.workspaceDir, ".state") },
       agentId: params.agentId ?? "main",
       sessionId,
-      transcriptPath: params.transcriptPath,
       event,
       now: () => timestampFromTranscriptEvent(event, fallbackNow),
     });

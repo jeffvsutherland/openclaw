@@ -18,10 +18,12 @@ function testSessionId(suffix = "session-1"): string {
   return suffix;
 }
 
-async function writeTestBinding(options: { authProfileId?: string } = {}): Promise<string> {
+async function writeTestBinding(
+  options: { authProfileId?: string; keyOnly?: boolean } = {},
+): Promise<string> {
   const sessionId = testSessionId();
   await writeCodexAppServerBinding(
-    { sessionKey: "agent:main:session-1", sessionId },
+    { sessionKey: "agent:main:session-1", ...(options.keyOnly ? {} : { sessionId }) },
     {
       threadId: "thread-1",
       cwd: tempDir,
@@ -43,11 +45,13 @@ function startCompaction(sessionId: string, options: { currentTokenCount?: numbe
 describe("maybeCompactCodexAppServerSession", () => {
   beforeEach(async () => {
     await clearCodexAppServerBinding({ sessionKey: "agent:main:session-1" });
+    await clearCodexAppServerBinding(testSessionId());
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-codex-compact-"));
   });
 
   afterEach(async () => {
     await clearCodexAppServerBinding({ sessionKey: "agent:main:session-1" });
+    await clearCodexAppServerBinding(testSessionId());
     __testing.resetCodexAppServerClientFactoryForTests();
     await fs.rm(tempDir, { recursive: true, force: true });
   });
@@ -145,7 +149,7 @@ describe("maybeCompactCodexAppServerSession", () => {
   it("looks up native compaction bindings by OpenClaw session key", async () => {
     const fake = createFakeCodexClient();
     __testing.setCodexAppServerClientFactoryForTests(async () => fake.client);
-    const sessionId = await writeTestBinding();
+    const sessionId = await writeTestBinding({ keyOnly: true });
     await expect(readCodexAppServerBinding(sessionId)).resolves.toBeUndefined();
 
     const pendingResult = startCompaction(sessionId);
@@ -434,7 +438,6 @@ describe("maybeCompactCodexAppServerSession", () => {
     };
 
     const result = await maybeCompactCodexAppServerSession({
-      sessionId: "session-1",
       sessionKey: "agent:main:session-1",
       sessionId: "missing-binding",
       workspaceDir: tempDir,

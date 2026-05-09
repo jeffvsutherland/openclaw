@@ -188,7 +188,6 @@ function seedSessionHistory(
   replaceSqliteSessionTranscriptEvents({
     agentId: "main",
     sessionId,
-    transcriptPath: sessionId,
     events: [
       { type: "session", version: 1, id: "session-1" },
       ...messages.map((message, index) => ({

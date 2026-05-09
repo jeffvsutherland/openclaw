@@ -349,7 +349,6 @@ describe("memory index", () => {
     replaceSqliteSessionTranscriptEvents({
       agentId: "main",
       sessionId: params.sessionId,
-      transcriptPath,
       events: params.events,
       now: () => params.now ?? Date.now(),
     });
