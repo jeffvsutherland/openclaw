@@ -119,7 +119,7 @@ function configureTaskRegistryMaintenanceRuntimeForTest(params: {
     cfg: {} as never,
     agentId: "main",
     sessionKey: "",
-    storeSessionKey: "",
+    rowSessionKey: "",
     entry: undefined,
     readFailed: false,
   } satisfies AcpSessionStoreEntry;
@@ -226,7 +226,7 @@ function createAcpSessionStoreEntry(params: {
     cfg: {} as never,
     agentId: "main",
     sessionKey: params.sessionKey,
-    storeSessionKey: params.sessionKey,
+    rowSessionKey: params.sessionKey,
     entry: {
       sessionId: `${params.sessionKey}:session`,
       updatedAt: Date.now(),
@@ -2083,7 +2083,7 @@ describe("task-registry", () => {
           cfg: {} as never,
           agentId: "main",
           sessionKey: "",
-          storeSessionKey: "",
+          rowSessionKey: "",
           entry: undefined,
           readFailed: false,
         }),
