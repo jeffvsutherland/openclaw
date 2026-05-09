@@ -292,7 +292,7 @@ describeLive("gateway live trajectory export", () => {
           "manifest.json",
           "metadata.json",
           "prompts.json",
-          "session.jsonl",
+          "session-branch.json",
           "tools.json",
         ]),
       );
