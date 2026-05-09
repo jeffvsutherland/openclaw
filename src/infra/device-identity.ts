@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { resolveStateDir } from "../config/paths.js";
 import {
-  readOpenClawStateKvJson,
+  readOpenClawStateKvJsonResult,
   writeOpenClawStateKvJson,
   type OpenClawStateJsonValue,
 } from "../state/openclaw-state-kv.js";
@@ -32,6 +32,13 @@ export class DeviceIdentityMigrationRequiredError extends Error {
       `Legacy device identity exists at ${filePath} but has not been imported into SQLite. Run "openclaw doctor --fix" before starting the gateway or connecting this client.`,
     );
     this.name = "DeviceIdentityMigrationRequiredError";
+  }
+}
+
+export class DeviceIdentityStorageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DeviceIdentityStorageError";
   }
 }
 
@@ -127,19 +134,31 @@ function parseStoredIdentity(value: unknown): StoredDeviceIdentity | null {
 }
 
 function readStoredIdentity(filePath: string): StoredDeviceIdentity | null {
-  return parseStoredIdentity(
-    readOpenClawStateKvJson(
-      DEVICE_IDENTITY_SCOPE,
-      identityKeyForPath(filePath),
-      stateDbOptionsForIdentityPath(filePath),
-    ),
+  const result = readOpenClawStateKvJsonResult(
+    DEVICE_IDENTITY_SCOPE,
+    identityKeyForPath(filePath),
+    stateDbOptionsForIdentityPath(filePath),
   );
+  if (!result.exists) {
+    return null;
+  }
+  const parsed = parseStoredIdentity(result.value);
+  if (!parsed) {
+    throw new DeviceIdentityStorageError(
+      'Stored device identity is invalid. Run "openclaw doctor --fix" before starting the gateway or connecting this client.',
+    );
+  }
+  return parsed;
 }
 
 function readStoredIdentityForEnv(env: NodeJS.ProcessEnv): StoredDeviceIdentity | null {
-  return parseStoredIdentity(
-    readOpenClawStateKvJson(DEVICE_IDENTITY_SCOPE, DEVICE_IDENTITY_KEY, { env }),
-  );
+  const result = readOpenClawStateKvJsonResult(DEVICE_IDENTITY_SCOPE, DEVICE_IDENTITY_KEY, {
+    env,
+  });
+  if (!result.exists) {
+    return null;
+  }
+  return parseStoredIdentity(result.value);
 }
 
 function legacyIdentityFileExists(filePath: string): boolean {
