@@ -38,7 +38,7 @@ vi.mock("openclaw/plugin-sdk/cron-store-runtime", async () => {
 
 function mockCronJobUpdate(jobs: Array<Record<string, unknown>>) {
   const updatedJobs: Array<Record<string, unknown>> = [];
-  updateCronStoreJobs.mockImplementation(async (_storePath, updateJob) => {
+  updateCronStoreJobs.mockImplementation(async (_storeKey, updateJob) => {
     let updatedCount = 0;
     updatedJobs.length = 0;
     for (const job of jobs) {
@@ -77,7 +77,7 @@ export function installMaybePersistResolvedTelegramTargetTests(params?: {
       writeConfigFile.mockReset();
       resolveCronStoreKey.mockReset();
       updateCronStoreJobs.mockReset();
-      resolveCronStoreKey.mockReturnValue("/tmp/cron/jobs.json");
+      resolveCronStoreKey.mockReturnValue("telegram-target-writeback");
       updateCronStoreJobs.mockResolvedValue({ updatedJobs: 0 });
     });
 
@@ -95,9 +95,7 @@ export function installMaybePersistResolvedTelegramTargetTests(params?: {
     if (params?.includeGatewayScopeCases) {
       it("skips config and cron writeback for gateway callers missing operator.admin", async () => {
         await maybePersistResolvedTelegramTarget({
-          cfg: {
-            cron: { store: "/tmp/cron/jobs.json" },
-          } as OpenClawConfig,
+          cfg: {} as OpenClawConfig,
           rawTarget: "t.me/mychannel",
           resolvedChatId: "-100123",
           gatewayClientScopes: ["operator.write"],
@@ -110,9 +108,7 @@ export function installMaybePersistResolvedTelegramTargetTests(params?: {
 
       it("skips config and cron writeback for gateway callers with an empty scope set", async () => {
         await maybePersistResolvedTelegramTarget({
-          cfg: {
-            cron: { store: "/tmp/cron/jobs.json" },
-          } as OpenClawConfig,
+          cfg: {} as OpenClawConfig,
           rawTarget: "t.me/mychannel",
           resolvedChatId: "-100123",
           gatewayClientScopes: [],
@@ -148,9 +144,7 @@ export function installMaybePersistResolvedTelegramTargetTests(params?: {
       ]);
 
       await maybePersistResolvedTelegramTarget({
-        cfg: {
-          cron: { store: "/tmp/cron/jobs.json" },
-        } as OpenClawConfig,
+        cfg: {} as OpenClawConfig,
         rawTarget: "t.me/mychannel",
         resolvedChatId: "-100123",
       });
@@ -172,7 +166,10 @@ export function installMaybePersistResolvedTelegramTargetTests(params?: {
         expect.objectContaining({ expectedConfigPath: "/tmp/openclaw.json" }),
       );
       expect(updateCronStoreJobs).toHaveBeenCalledTimes(1);
-      expect(updateCronStoreJobs).toHaveBeenCalledWith("/tmp/cron/jobs.json", expect.any(Function));
+      expect(updateCronStoreJobs).toHaveBeenCalledWith(
+        "telegram-target-writeback",
+        expect.any(Function),
+      );
       expect(updatedJobs).toEqual([
         { id: "a", delivery: { channel: "telegram", to: "-100123" } },
         { id: "b", delivery: { channel: "slack", to: "C123" } },
@@ -245,7 +242,10 @@ export function installMaybePersistResolvedTelegramTargetTests(params?: {
         }),
         expect.any(Object),
       );
-      expect(updateCronStoreJobs).toHaveBeenCalledWith("/tmp/cron/jobs.json", expect.any(Function));
+      expect(updateCronStoreJobs).toHaveBeenCalledWith(
+        "telegram-target-writeback",
+        expect.any(Function),
+      );
       expect(updatedJobs).toEqual([{ id: "a", delivery: { channel: "telegram", to: "-100123" } }]);
     });
   });
