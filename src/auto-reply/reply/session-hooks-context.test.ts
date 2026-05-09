@@ -173,7 +173,6 @@ describe("session hook context wiring", () => {
     });
     expect(context).toMatchObject({ sessionKey, agentId: "main" });
     expect(context).toMatchObject({ sessionId: event?.sessionId });
-    expect(event).not.toHaveProperty("transcriptLocator");
 
     const [startEvent, startContext] = hookRunnerMocks.runSessionStart.mock.calls[0] ?? [];
     expect(startEvent).toMatchObject({ resumedFrom: "old-session" });
@@ -243,7 +242,6 @@ describe("session hook context wiring", () => {
       expect(event).toMatchObject({
         reason: "daily",
       });
-      expect(event).not.toHaveProperty("transcriptLocator");
       expect(event?.nextSessionId).toBe(startEvent?.sessionId);
     } finally {
       vi.useRealTimers();

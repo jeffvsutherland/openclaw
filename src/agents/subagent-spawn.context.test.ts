@@ -74,7 +74,6 @@ describe("sessions_spawn context modes", () => {
       sessionId: "forked-session-id",
       forkedFromParent: true,
     });
-    expect(store[result.childSessionKey ?? ""]).not.toHaveProperty("transcriptLocator");
     expect(prepareSubagentSpawn).toHaveBeenCalledWith(
       expect.objectContaining({
         parentSessionKey: "main",

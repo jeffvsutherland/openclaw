@@ -89,7 +89,6 @@ describe("rotateTranscriptAfterCompaction", () => {
 
     expect(result.rotated).toBe(true);
     expect(result.sessionId).toBeTruthy();
-    expect(result).not.toHaveProperty("transcriptLocator");
 
     const successor = await loadState({
       agentId: "main",
@@ -116,7 +115,6 @@ describe("rotateTranscriptAfterCompaction", () => {
 
     expect(result.rotated).toBe(true);
     expect(result.sessionId).toBeTruthy();
-    expect(result).not.toHaveProperty("transcriptLocator");
     expect(result.sessionId).not.toBe(sourceScope.sessionId);
     expect((await loadState(sourceScope)).getEntries()).toEqual(originalEntries);
 

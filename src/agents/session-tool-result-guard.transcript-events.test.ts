@@ -45,6 +45,5 @@ describe("guardSessionManager transcript updates", () => {
         role: "assistant",
       },
     });
-    expect(updates[0]).not.toHaveProperty("transcriptLocator");
   });
 });

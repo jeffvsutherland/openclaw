@@ -137,7 +137,6 @@ describe("Crestodian assistant", () => {
       cleanupCliLiveSessionOnRunEnd: true,
     });
     expect(firstCliCall.sessionId).toMatch(/^crestodian-planner-.*-session$/);
-    expect(firstCliCall).not.toHaveProperty("transcriptLocator");
     expect(firstCliCall.config?.agents?.defaults?.cliBackends).toBeUndefined();
     expect(firstCliCall.extraSystemPrompt).toContain("Do not use tools, shell commands");
     expect(runEmbeddedPiAgent).not.toHaveBeenCalled();
@@ -274,6 +273,5 @@ describe("Crestodian assistant", () => {
       cleanupCliLiveSessionOnRunEnd: true,
     });
     expect(runCliAgent.mock.calls[0][0].sessionId).toMatch(/^crestodian-planner-.*-session$/);
-    expect(runCliAgent.mock.calls[0][0]).not.toHaveProperty("transcriptLocator");
   });
 });

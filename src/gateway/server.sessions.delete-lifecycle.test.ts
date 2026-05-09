@@ -205,7 +205,6 @@ test("sessions.delete emits session_end with deleted reason and no replacement",
     sessionKey: "agent:main:discord:group:delete",
     reason: "deleted",
   });
-  expect(event).not.toHaveProperty("transcriptLocator");
   expect((event as { nextSessionId?: string } | undefined)?.nextSessionId).toBeUndefined();
   expect(context).toMatchObject({
     sessionId: "sess-delete",

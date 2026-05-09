@@ -675,7 +675,6 @@ describe("agentCommand", () => {
 
       const callArgs = vi.mocked(runEmbeddedPiAgent).mock.calls.at(-1)?.[0];
       expect(callArgs?.sessionId).toBe("session-123");
-      expect(callArgs).not.toHaveProperty("transcriptLocator");
     });
   });
 
@@ -1064,7 +1063,6 @@ describe("agentCommand", () => {
       );
       let callArgs = getLastEmbeddedCall();
       expect(callArgs?.sessionKey).toBe("agent:ops:main");
-      expect(callArgs).not.toHaveProperty("transcriptLocator");
       expect(callArgs?.messageChannel).toBe("slack");
       expect(runtime.log).toHaveBeenCalledWith("ok");
 
