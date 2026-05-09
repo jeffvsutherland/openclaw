@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { WebSocket } from "ws";
@@ -137,7 +135,6 @@ async function writeMainSessionEntry(params: {
   lastChannel?: string;
   lastTo?: string;
 }) {
-  await useTempSessionStorePath();
   await seedGatewaySessionEntries({
     entries: {
       main: {
@@ -175,10 +172,6 @@ async function sendAgentWsRequestAndWaitFinal(
   );
   sendAgentWsRequest(socket, params);
   return await finalP;
-}
-
-async function useTempSessionStorePath() {
-  await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-gw-"));
 }
 
 describe("gateway server agent", () => {
@@ -233,7 +226,6 @@ describe("gateway server agent", () => {
   );
 
   test("agent preserves CLI session binding metadata when refreshing session state", async () => {
-    await useTempSessionStorePath();
     await seedGatewaySessionEntries({
       entries: {
         main: {
@@ -452,8 +444,6 @@ describe("gateway server agent", () => {
 
   test("write-scoped callers cannot reset conversations via agent", async () => {
     await withGatewayServer(async ({ port }) => {
-      await useTempSessionStorePath();
-
       await seedGatewaySessionEntries({
         entries: {
           main: {

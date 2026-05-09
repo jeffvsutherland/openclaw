@@ -83,7 +83,7 @@ async function arrangeAgentsDeleteTest(params: {
   return deletedAgentId;
 }
 
-function expectSessionStore(
+function expectSessionRows(
   agentId: string,
   sessions: Record<string, { sessionId: string; updatedAt: number }>,
 ) {
@@ -132,7 +132,7 @@ describe("agents delete command", () => {
         "agent:ops:main": { sessionId: "sess-ops-main", updatedAt: now + 1 },
         "agent:main:main": { sessionId: "sess-main", updatedAt: now + 2 },
       };
-      const storePath = await arrangeAgentsDeleteTest({
+      const deletedAgentId = await arrangeAgentsDeleteTest({
         stateDir,
         cfg,
         deletedAgentId: "ops",
@@ -154,7 +154,7 @@ describe("agents delete command", () => {
         }),
       );
       expect(configMocks.replaceConfigFile).not.toHaveBeenCalled();
-      expectSessionStore(storePath, sessions);
+      expectSessionRows(deletedAgentId, sessions);
       expect(readJsonLogs()[0]).toMatchObject({
         agentId: "ops",
         removedBindings: 0,
@@ -163,7 +163,7 @@ describe("agents delete command", () => {
     });
   });
 
-  it("purges deleted agent entries from the session store", async () => {
+  it("purges deleted agent entries from SQLite session rows", async () => {
     await withStateDirEnv("openclaw-agents-delete-", async ({ stateDir }) => {
       const now = Date.now();
       const cfg: OpenClawConfig = {
@@ -174,7 +174,7 @@ describe("agents delete command", () => {
           ],
         },
       } satisfies OpenClawConfig;
-      const storePath = await arrangeAgentsDeleteTest({
+      const deletedAgentId = await arrangeAgentsDeleteTest({
         stateDir,
         cfg,
         sessions: {
@@ -194,7 +194,7 @@ describe("agents delete command", () => {
           },
         }),
       );
-      expectSessionStore(storePath, {
+      expectSessionRows(deletedAgentId, {
         "agent:main:main": { sessionId: "sess-main", updatedAt: now + 3 },
       });
     });
@@ -208,7 +208,7 @@ describe("agents delete command", () => {
           list: [{ id: "ops", default: true, workspace: path.join(stateDir, "workspace-ops") }],
         },
       };
-      const storePath = await arrangeAgentsDeleteTest({
+      const deletedAgentId = await arrangeAgentsDeleteTest({
         stateDir,
         cfg,
         sessions: {
@@ -225,7 +225,7 @@ describe("agents delete command", () => {
       await agentsDeleteCommand({ id: "ops", force: true, json: true }, runtime);
 
       expect(runtime.exit).not.toHaveBeenCalled();
-      expectSessionStore(storePath, {
+      expectSessionRows(deletedAgentId, {
         "agent:main:quietchat:direct:u2": {
           sessionId: "sess-stale-main",
           updatedAt: now + 3,
